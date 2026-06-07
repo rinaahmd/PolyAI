@@ -60,6 +60,8 @@ You can use tools like curl, Postman, or a web browser to test the endpoints. Fo
 1. Upload an image:
 ```bash
 curl -X POST -F "file=@your_image.jpg" http://localhost:8080/predict
+curl -X POST -F "file=@services/yolo/beatles.jpeg" http://localhost:8080/predict
+
 ```
 
 2. View detection results (replace {uid} with the ID returned from the upload):
