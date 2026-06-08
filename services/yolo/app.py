@@ -182,6 +182,79 @@ def get_prediction_image(uid: str):
     return FileResponse(row[0])
 
 
+
+
+
+
+
+
+
+
+
+
+
+@app.get("/predictions/label/{label}")
+def get_predictions_by_label(label: str):
+    """
+    Return all prediction sessions that contain at least one
+    detected object with the given label.
+    """
+
+    if not label.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Label cannot be empty"
+        )
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+
+        sessions = conn.execute("""
+            SELECT DISTINCT ps.*
+            FROM prediction_sessions ps
+            JOIN detection_objects d
+                ON ps.uid = d.prediction_uid
+            WHERE d.label = ?
+        """, (label,)).fetchall()
+
+        result = []
+
+        for session in sessions:
+            objects = conn.execute("""
+                SELECT id, label, score, box
+                FROM detection_objects
+                WHERE prediction_uid = ?
+            """, (session["uid"],)).fetchall()
+
+            result.append({
+                "uid": session["uid"],
+                "timestamp": session["timestamp"],
+                "detection_objects": [
+                    {
+                        "id": obj["id"],
+                        "label": obj["label"],
+                        "score": obj["score"],
+                        "box": obj["box"]
+                    }
+                    for obj in objects
+                ]
+            })
+
+        return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.get("/health")
 def health():
     """

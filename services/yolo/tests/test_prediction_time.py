@@ -4,6 +4,8 @@ import tempfile
 from fastapi.testclient import TestClient
 import app as app_module
 from app import app, init_db
+import warnings
+warnings.filterwarnings("ignore", category=ResourceWarning)
 
 TEST_IMAGE = os.path.join(os.path.dirname(__file__), "data", "beatles.jpeg")
 
