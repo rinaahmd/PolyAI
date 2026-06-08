@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("CONFIDENCE_THRESHOLD", "0.5")
 
 from app import app, init_db
+from app import save_prediction_session, save_detection_object
 
 TEST_IMAGE = os.path.join(os.path.dirname(__file__), "data", "beatles.jpeg")
 
@@ -25,5 +26,7 @@ def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
 
 
