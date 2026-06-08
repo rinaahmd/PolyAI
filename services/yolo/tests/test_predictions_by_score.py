@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app import app, init_db
+from app import app
 import app as app_module
 
 
@@ -9,7 +9,7 @@ import app as app_module
 # --------------------
 @pytest.fixture
 def client():
-    return TestClient(app)
+    return TestClient(app_module.app)
 
 
 # --------------------
@@ -17,9 +17,13 @@ def client():
 # --------------------
 @pytest.fixture(autouse=True)
 def setup_db(tmp_path, monkeypatch):
-    db_file = str(tmp_path / "test.db")
-    monkeypatch.setattr(app_module, "DB_PATH", db_file)
-    init_db()
+    db_file = tmp_path / "test.db"
+
+    # Point app to test DB
+    monkeypatch.setattr(app_module, "DB_PATH", str(db_file))
+
+    # Initialize schema AFTER patching DB
+    app_module.init_db()
 
 
 # --------------------
@@ -30,8 +34,11 @@ def test_score_filter_returns_results(client):
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO prediction_sessions (uid, timestamp) VALUES (?, ?)",
-        ("uid-1", "2024-01-01 12:00:00")
+        """
+        INSERT INTO prediction_sessions (uid, timestamp, original_image, predicted_image)
+        VALUES (?, ?, ?, ?)
+        """,
+        ("uid-1", "2024-01-01 12:00:00", "orig.jpg", "pred.jpg")
     )
 
     cur.execute("""
@@ -57,8 +64,11 @@ def test_score_filter_filters_low_scores(client):
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO prediction_sessions (uid, timestamp) VALUES (?, ?)",
-        ("uid-2", "2024-01-01 12:00:00")
+        """
+        INSERT INTO prediction_sessions (uid, timestamp, original_image, predicted_image)
+        VALUES (?, ?, ?, ?)
+        """,
+        ("uid-2", "2024-01-01 12:00:00", "orig.jpg", "pred.jpg")
     )
 
     cur.execute("""
