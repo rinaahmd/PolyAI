@@ -190,6 +190,44 @@ def get_prediction_image(uid: str):
 
 
 
+@app.get("/predictions/score/{min_score}")
+def get_predictions_by_score(min_score: float):
+    # validate range
+    if min_score < 0.0 or min_score > 1.0:
+        raise HTTPException(
+            status_code=400,
+            detail="min_score must be between 0.0 and 1.0"
+        )
+
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT d.id, d.prediction_uid, d.label, d.score, d.box
+        FROM detection_objects d
+        WHERE d.score >= ?
+    """, (min_score,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": r[0],
+            "prediction_uid": r[1],
+            "label": r[2],
+            "score": r[3],
+            "box": r[4],
+        }
+        for r in rows
+    ]
+
+
+
+
+
+
+
 
 
 
